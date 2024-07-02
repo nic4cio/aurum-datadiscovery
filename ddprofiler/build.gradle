@@ -46,7 +46,7 @@ dependencies {
     // mysql driver
     compile 'mysql:mysql-connector-java:5.1.6'
     // postgresql driver
-    compile 'postgresql:postgresql:9.4.1208.jre6'
+    compile 'org.postgresql:postgresql:42.7.3'
     // oracle 10g driver
     compile 'com.oracle:ojdbc14:10.2.0.5'
     // sqlserver driver 
