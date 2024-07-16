@@ -8,15 +8,15 @@ from api.apiutils import DRSMode
 from api.apiutils import Hit
 from api.apiutils import compute_field_id as id_from
 
-store_client = None
-
+# store_client = None
 
 class DDAPI:
 
-    __network = None
+    # __network = None
 
-    def __init__(self, network):
+    def __init__(self, network, store_client):
         self.__network = network
+        self.__store_client = store_client
 
     """
     Seed API
@@ -104,7 +104,7 @@ class DDAPI:
         :param max_results: the maximum number of results to return
         :return: returns a DRS
         """
-        hits = store_client.search_keywords(kw, KWType.KW_CONTENT, max_results)
+        hits = self.__store_client.search_keywords(kw, KWType.KW_CONTENT, max_results)
         drs = DRS([x for x in hits], Operation(OP.KW_LOOKUP, params=[kw]))  # materialize generator
         return drs
 
