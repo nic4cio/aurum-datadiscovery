@@ -6,8 +6,8 @@ import time
 from api.reporting import Report
 from knowledgerepr import fieldnetwork
 from modelstore.elasticstore import StoreHandler
-from ddapi import API as oldAPI
-from algebra import API
+from ddapi import API # as oldAPI
+# from algebra import API
 
 init_banner = "Welcome to Aurum. \nYou can access the API via the object api"
 exit_banner = "Bye!"
@@ -43,7 +43,7 @@ def init_system(path_to_serialized_model, create_reporting=False):
     else:
         # Better always return a tuple even if second element is `None`
         reporting = None
-    api.helper.help()
+    # api.helper.help()
     el = time.time()
     print("Took " + str(el - sl) + " to load model")
     return api, reporting
