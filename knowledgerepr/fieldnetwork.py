@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import operator
+import pickle
 import networkx as nx
 import os
 
@@ -78,7 +79,12 @@ class FieldNetwork:
         return hits
 
     def get_cardinality_of(self, node_id):
+        #envp3.5
         c = self.__G.node[node_id]
+
+        #python 3.10 newer versions
+        #c = self.__G.nodes[node_id]
+
         card = c['cardinality']
         if card is None:
             return 0  # no cardinality is like card 0
@@ -150,7 +156,11 @@ class FieldNetwork:
         :return:
         """
         score = {'score': score}
+        #used on envp3.5
         self.__G.add_edge(node_src, node_target, relation, score)
+
+        #new version networkx python 3.10
+        #self.__G.add_edge(node_src, node_target, relation=relation, score=score)
 
     def fields_degree(self, topk):
         degree = nx.degree(self.__G)
@@ -464,15 +474,40 @@ def serialize_network(network, path):
     path = path + '/'  # force separator
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
+    #older network envp3.5
     nx.write_gpickle(G, path + "graph.pickle")
     nx.write_gpickle(id_to_field_info, path + "id_info.pickle")
     nx.write_gpickle(table_to_ids, path + "table_ids.pickle")
 
+    #https://networkx.org/documentation/stable/release/migration_guide_from_2.x_to_3.0.html
+
+
+    #Python 3.10
+    #with open(path + "graph.pickle", "wb") as f:
+    #    pickle.dump(G, f)
+
+    #with open(path + "id_info.pickle", "wb") as f:
+    #    pickle.dump(id_to_field_info, f)
+
+    #with open(path + "table_ids.pickle", "wb") as f:
+    #    pickle.dump(table_to_ids, f)
+
+
 
 def deserialize_network(path):
+    #Python3.5
     G = nx.read_gpickle(path + "graph.pickle")
     id_to_info = nx.read_gpickle(path + "id_info.pickle")
     table_to_ids = nx.read_gpickle(path + "table_ids.pickle")
+
+    #Python3.10 newer versions networkx
+    #with open(path + "graph.pickle", "rb") as f:
+    #    G = pickle.load(f)
+    #with open(path + "id_info.pickle", "rb") as f:
+    #    id_to_info = pickle.load(f)
+    #with open(path + "table_ids.pickle", "rb") as f:
+    #    table_to_ids = pickle.load(f)
+
     network = FieldNetwork(G, id_to_info, table_to_ids)
     return network
 

@@ -7,6 +7,8 @@ from inputoutput import inputoutput as io
 import sys
 import time
 
+import os 
+
 
 def main(output_path=None):
     start_all = time.time()
@@ -60,10 +62,22 @@ def main(output_path=None):
     print("Time to extract minhash signatures from store: {0}".format(str(et - st)))
     print("!!3 " + str(et - st))
 
+    #running MinHash LSH 
+    print("Running MinHash LSH...")
+    content_sim_index, memory_usage_lsh = networkbuilder.build_content_sim_mh_text(network, mh_signatures)
+    print("MinHash LSH - Memory Usage: {:.2f} MB".format(memory_usage_lsh))
+    end_text_sig_sim = time.time()
+    print("Total text-sig-sim (minhash): {0}".format(str(end_text_sig_sim - start_text_sig_sim)))
+    print("!!4 " + str(end_text_sig_sim - start_text_sig_sim))
+
+    #running LSHForest
+    """
+    print("Running MinHash LSH...")
     content_sim_index = networkbuilder.build_content_sim_mh_text(network, mh_signatures)
     end_text_sig_sim = time.time()
     print("Total text-sig-sim (minhash): {0}".format(str(end_text_sig_sim - start_text_sig_sim)))
     print("!!4 " + str(end_text_sig_sim - start_text_sig_sim))
+    """
 
     # Content_sim num relation
     start_num_sig_sim = time.time()
@@ -94,8 +108,12 @@ def main(output_path=None):
     # Serialize indexes
     path_schsim = path + "/schema_sim_index.pkl"
     io.serialize_object(schema_sim_index, path_schsim)
+    disk_sch_space = os.path.getsize(path_schsim)
+    print("Schema Sim Index - Disk Space: {:.2f} MB".format(disk_sch_space)) 
     path_cntsim = path + "/content_sim_index.pkl"
     io.serialize_object(content_sim_index, path_cntsim)
+    disk_cnt_space = os.path.getsize(path_cntsim) / 1024 / 1024  # in MB
+    print("Content Sim Index - Disk Space: {:.2f} MB".format(disk_cnt_space)) 
 
     print("DONE!")
 
