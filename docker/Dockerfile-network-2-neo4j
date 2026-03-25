@@ -1,7 +1,19 @@
 # network=>neo4j
-FROM buildpack-deps:buster
+FROM ubuntu:18.04
+
+RUN apt-get update && \
+    apt-get install -y \
+        software-properties-common \
+    && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get purge -y --auto-remove \
+        software-properties-common \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
+    python3.5 \
     python3-pip \
     python-dev \
     pkg-config \
@@ -16,6 +28,11 @@ RUN apt-get update && apt-get install -y \
 
 # Installs upgraded pip3 as pip3.4. pip3 continues to refer to apt's pip3.
 RUN pip3 install --upgrade pip
+
+RUN pip3 install wheel
+
+# Runs numpy manually 
+RUN pip3 install numpy==1.13.3
 
 COPY requirements.txt /tmp/
 

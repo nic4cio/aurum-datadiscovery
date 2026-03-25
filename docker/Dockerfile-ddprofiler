@@ -10,6 +10,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         software-properties-common \
     && \
+    #add-apt-repository ppa:webupd8team/java && \
     apt-get purge -y --auto-remove \
         software-properties-common \
     && \

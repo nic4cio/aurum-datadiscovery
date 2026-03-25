@@ -9,7 +9,7 @@
 # 3*. docker-compose build nbc
 # 3*. docker-compose run --rm -T nbc
 # 3. docker-compose up -d neodb
-#    Run the neo4j instance,user='neo4j',password='aurum'
+#    Run the neo4j instance,user='neo4j',password='aurumaurum'
 # 4. docker-compose up nbc
 #     Runs networkbuildercoordinator.py with the above elasticsearch and saves its files to data/pickles.
 # 5. docker-compose up notebook
@@ -80,6 +80,35 @@ services:
       aurum_net:
         aliases:
           - notebook
+
+  neodb:
+      container_name: neodb
+      image: neo4j:latest
+      volumes:
+        - ./data/neo4j-data:/data
+        - ./data/neo4j-logs:/logs
+      ports:
+        - 7474:7474
+        - 7687:7687
+      environment:
+        - NEO4J_AUTH=neo4j/aurumaurum
+      networks:
+        aurum_net:
+          aliases:
+            - neo4j
+
+  network2neo4j:
+    image: aurum/network2neo4j
+    build:
+      context: .
+      dockerfile: docker/Dockerfile-network-2-neo4j
+    volumes:
+      - ./data/models:/output
+    command: --neo_url bolt://neo4j:7687
+    networks:
+      aurum_net:
+        aliases:
+          - n2n
 
 #  frontend:
 #    depends_on:

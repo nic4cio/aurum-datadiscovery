@@ -1,5 +1,8 @@
 import time
 
+import psutil
+import os 
+
 from dataanalysis import dataanalysis as da
 from math import isinf
 
@@ -10,7 +13,7 @@ from nearpy.hashes import RandomBinaryProjections, RandomBinaryProjectionTree
 from nearpy.hashes import RandomDiscretizedProjections
 from nearpy.distances import CosineDistance, EuclideanDistance, ManhattanDistance
 from sklearn.decomposition import TruncatedSVD
-from datasketch import MinHash, MinHashLSH
+from datasketch import MinHash, MinHashLSH, MinHashLSHForest
 
 from sklearn.cluster import DBSCAN
 import numpy as np
@@ -225,8 +228,12 @@ def build_content_sim_relation_text(network, signatures):
     nid_gen = get_nid_gen(signatures)
     create_sim_graph_text(nid_gen, network, text_engine, tfidf, Relation.CONTENT_SIM)
 
+# adding a  function to measure memory usage
+def measure_memory_usage():
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / 1024 / 1024  
 
-def build_content_sim_mh_text(network, mh_signatures):
+def build_content_sim_mh_text(network, mh_signatures, algorithm = "lsh"):
 
     def connect(nid1, nid2, score):
         network.add_relation(nid1, nid2, Relation.CONTENT_SIM, score)
@@ -234,24 +241,49 @@ def build_content_sim_mh_text(network, mh_signatures):
     # Materialize signatures for convenience
     mh_sig_obj = []
 
-    content_index = MinHashLSH(threshold=0.7, num_perm=512)
+    if algorithm == "lsh":
+        content_index = MinHashLSH(threshold=0.7, num_perm=512)
+    elif algorithm == "lshforest":
+        #LSHForest
+        content_index = MinHashLSHForest(num_perm=512)
 
+    # measure memory usage before building the index
+    memory_before = measure_memory_usage()
+    
     # Create minhash objects and index
     for nid, mh_sig in mh_signatures:
         mh_obj = MinHash(num_perm=512)
         mh_array = np.asarray(mh_sig, dtype=int)
         mh_obj.hashvalues = mh_array
-        content_index.insert(nid, mh_obj)
+        if algorithm == "lsh":
+            content_index.insert(nid, mh_obj)
+        if algorithm == "lshforest":
+            #LSHForest
+            content_index.add(nid, mh_obj)
         mh_sig_obj.append((nid, mh_obj))
+
+    if algorithm == "lshforest":
+        #build the LSHForest
+        content_index.index()
+
+    # measure memory usage after building the index
+    memory_after = measure_memory_usage()
+    memory_usage = memory_after - memory_before
 
     # Query objects
     for nid, mh_obj in mh_sig_obj:
-        res = content_index.query(mh_obj)
+        if algorithm == "lsh":
+            res = content_index.query(mh_obj)
+        elif algorithm == "lshforest":
+            #LSHForest
+            # Using mh_obj as the query, retrieve top 2 keys that have the higest Jaccard
+            res = content_index.query(mh_obj, 2)
+        #print("Query results for {}: {}".format(nid, res))
         for r_nid in res:
             if r_nid != nid:
                 connect(nid, r_nid, 1)
 
-    return content_index
+    return content_index, memory_usage
 
 
 def build_content_sim_relation_num_overlap_distr_indexed(network, id_sig):
@@ -635,10 +667,16 @@ def build_pkfk_relation(network):
     total_pkfk_relations = 0
     for n in network.iterate_ids():
         n_card = network.get_cardinality_of(n)
+
+        # Debugging: Print node cardinality
+        #print(f"Node {n}: Cardinality = {n_card}")
+
         if n == '2314808454' or n == '1504465753':
             debug = True
         if n_card > 0.7:  # Early check if this is a candidate
             neighborhood = get_neighborhood(n)
+            # Debugging: Check if neighborhood is empty
+            #print(f"Node {n} neighbors: {neighborhood}")
             for ne in neighborhood:
                 if ne is not n:
                     if ne.nid == '1504465753' or ne.nid == '2314808454':
@@ -649,6 +687,10 @@ def build_pkfk_relation(network):
                     else:
                         highest_card = ne_card
                     #if ne_card < 0.5:
+
+                    # Debugging: Print PKFK candidate pair
+                    #print(f"PKFK Candidate: {n} -> {ne.nid} (Cardinality: {highest_card})")
+
                     network.add_relation(n, ne.nid, Relation.PKFK, highest_card)
                     total_pkfk_relations += 1
                     #print(str(n) + " -> " + str(ne))

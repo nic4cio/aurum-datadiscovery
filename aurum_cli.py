@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import subprocess
-from dataclasses import dataclass
+# from dataclasses import dataclass #not supported in python3.5
 from os import environ
 from pathlib import Path
 from warnings import warn
@@ -27,11 +27,13 @@ class ModelNotFoundError(BaseAurumException):
     pass
 
 
-@dataclass()
+# @dataclass()
 class CSVDataSource:
-    name: str = 'NO NAME PROVIDED'
-    _path: Path = Path.cwd()
-    separator: str = ','
+    #fix for python 3.5 supported syntax
+    def __init__(self, name='NO NAME PROVIDED', path=None, separator=','):
+        self.name = name
+        self._path = Path.cwd() if path is None else Path(path)
+        self.separator = separator
 
     @property
     def path(self):
@@ -53,24 +55,32 @@ class CSVDataSource:
         }
 
     def to_yml(self):
-        return f"""api_version: 0
-sources:
-- name: "{self.name}"
-  type: csv
-  config:
-    path: "{str(self.path)}"
-    separator: '{self.separator}'"""
+        return (
+            'api_version: 0\n'
+            'sources:\n'
+            '- name: "{name}"\n'
+            '  type: csv\n'
+            '  config:\n'
+            '    path: "{path}"\n'
+            "    separator: '{separator}'\n"
+        ).format(
+            name=self.name,
+            path=str(self.path),
+            separator=self.separator
+        ) #python3.5 supported format
 
 
-@dataclass()
+
+# @dataclass()
 class DBDataSource:
-    name: str = ''
-    host: str = ''
-    _port: int = ''
-    db_name: str = ''
-    db_user: str = ''
-    db_password: str = ''
-    _type: str = ''
+    def __init__(self, name='', host='', port='', db_name='', db_user='', db_password='', db_type=''):
+        self.name = name
+        self.host = host
+        self._port = int(port) if port else 0
+        self.db_name = db_name
+        self.db_user = db_user
+        self.db_password = db_password
+        self._type = db_type #python3.5 supported syntax
 
     @property
     def port(self):
@@ -102,16 +112,24 @@ class DBDataSource:
         }
 
     def to_yml(self):
-        return f"""api_version: 0
-sources:
-- name: "{self.name}"
-  type: {self.type}
-  config:
-    db_server_ip: {self.host}
-    db_server_port: {self.port}
-    database_name: {self.db_name}
-    db_username: {self.db_user}
-    db_password: {self.db_password}"""
+        return """api_version: 0
+    sources:
+    - name: "{name}"
+    type: {type}
+    config:
+        db_server_ip: {host}
+        db_server_port: {port}
+        database_name: {db_name}
+        db_username: {db_user}
+        db_password: {db_password}""".format(
+            name=self.name,
+            type=self.type,
+            host=self.host,
+            port=self.port,
+            db_name=self.db_name,
+            db_user=self.db_user,
+            db_password=self.db_password
+        ) #python3.5 supported syntax
 
 
 class AurumWrapper(object):
@@ -206,7 +224,7 @@ class AurumCLI(AurumWrapper):
     def profile(self, data_source_name):
         ds_fp = super()._make_ds_path(data_source_name)
         if not ds_fp.exists():
-            raise DataSourceNotConfigured(f"Data Source {data_source_name} not configured!")
+            raise DataSourceNotConfigured("Data Source {} not configured!".format(data_source_name)) #python3.5 format
         profile_cmd = ['bash', self.ddprofiler_run_sh, '--sources', ds_fp]
         run_cmd(profile_cmd, cwd=self.ddprofiler_home)
 
@@ -215,7 +233,7 @@ class AurumCLI(AurumWrapper):
         try:
             model_dir_path.mkdir(parents=True)
         except FileExistsError:
-            warn(f'Model with the same name ({name}) already exists!')
+            warn('Model with the same name ({}) already exists!'.format(name)) #python3.5 format
 
         run_cmd(['python', 'networkbuildercoordinator.py', '--opath', model_dir_path])
 
@@ -224,7 +242,7 @@ class AurumCLI(AurumWrapper):
         supported_destionations = ['neo4j']
 
         if to not in supported_destionations:
-            raise NotImplementedError(f"Model destination not supported. Only {supported_destionations} are supported")
+            raise NotImplementedError("Model destination not supported. Only {supported_destionations} are supported".format(supported_destionations)) #python3.5 format
 
         model_dir_path = self._make_model_path(model_name)
 
@@ -232,8 +250,7 @@ class AurumCLI(AurumWrapper):
         # TODO refactor to separate method
         if not model_dir_path.exists():
             available_models = '\n'.join(self.models)
-            raise ModelNotFoundError(
-                f"Model {model_name} not found!\nHere are the available ones:\n{available_models}")
+            raise ModelNotFoundError("Model {} not found!\nHere are the available ones: {}".format(model_name, available_models)) #python3.5 format
 
         # Hacky way. The underlying `fieldnetwork.py:deserialize_network` should be changed
         model_path_str = model_dir_path.__str__() + '/'

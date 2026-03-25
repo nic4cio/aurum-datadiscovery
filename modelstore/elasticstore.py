@@ -29,6 +29,7 @@ class StoreHandler:
             :return:
             """
         global client
+        #envp3.5
         client = Elasticsearch([{'host': c.db_host, 'port': c.db_port}])
 
     def close(self):
