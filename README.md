@@ -44,3 +44,9 @@ https://github.com/mitdbg/aurum-datadiscovery/blob/master/CODE_OF_CONDUCT.md
 
 Please, report violations of the code of conduct by sending an email to
 raulcf@csail.mit.edu
+
+### Datasets
+To reproduce our experimental results, we provide full access to the source data utilized in our experiments:
+
+1. **ChEMBL Repository**: Available officially via the European Bioinformatics Institute at [EBI ChEMBL](https://www.ebi.ac.uk/chembl/).
+2. **Diverse CSVs Collection**: A heterogeneous benchmark gathering datasets from Kaggle, open data platforms, and relevant data mining literature, available at https://drive.google.com/drive/folders/1syiMjCPA9oPAEe_7N6nYhwsqAxUYvI1F?usp=sharing.
