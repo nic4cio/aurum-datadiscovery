@@ -233,7 +233,7 @@ def measure_memory_usage():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss / 1024 / 1024  
 
-def build_content_sim_mh_text(network, mh_signatures, algorithm = "lsh"):
+def build_content_sim_mh_text(network, mh_signatures, algorithm = "lshforest"):
 
     def connect(nid1, nid2, score):
         network.add_relation(nid1, nid2, Relation.CONTENT_SIM, score)
@@ -276,8 +276,8 @@ def build_content_sim_mh_text(network, mh_signatures, algorithm = "lsh"):
             res = content_index.query(mh_obj)
         elif algorithm == "lshforest":
             #LSHForest
-            # Using mh_obj as the query, retrieve top 2 keys that have the higest Jaccard
-            res = content_index.query(mh_obj, 2)
+            # Using mh_obj as the query, retrieve top keys that have the higest Jaccard
+            res = content_index.query(mh_obj, 9)
         #print("Query results for {}: {}".format(nid, res))
         for r_nid in res:
             if r_nid != nid:
